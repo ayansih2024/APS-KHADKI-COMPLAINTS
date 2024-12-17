@@ -3,11 +3,12 @@ import pandas as pd
 from datetime import datetime
 
 # Function to save complaint data to a CSV file
-def save_complaint(name, student_class, description):
+def save_complaint(name, designation, student_class, description):
     # Create a DataFrame to hold the complaint details
     complaint_data = {
         'Name': [name],
-        'Class': [student_class],
+        'Designation': [designation],
+        'Class': [student_class if designation == "Student" else "N/A"],
         'Description': [description],
         'Date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
     }
@@ -25,7 +26,7 @@ def load_complaints():
         df = pd.read_csv('complaints.csv')
         return df
     except FileNotFoundError:
-        return pd.DataFrame(columns=['Name', 'Class', 'Description', 'Date'])
+        return pd.DataFrame(columns=['Name', 'Designation', 'Class', 'Description', 'Date'])
 
 # Initialize session state to store complaints temporarily
 if 'complaints' not in st.session_state:
@@ -43,7 +44,10 @@ if page == "Submit Complaint":
 
     # Input fields for the complaint
     name = st.text_input("Enter your Name:")
-    student_class = st.text_input("Enter your Class:")
+    designation = st.selectbox("Select your Designation:", ["Student", "Teacher"])
+    student_class = ""
+    if designation == "Student":
+        student_class = st.text_input("Enter your Class:")
     description = st.text_area("Enter your Complaint Description:")
 
     # File upload (optional)
@@ -51,15 +55,16 @@ if page == "Submit Complaint":
 
     # Submit button
     if st.button("Submit Complaint"):
-        # Check if the fields are filled out, using strip() to avoid issues with extra spaces
-        if name.strip() and student_class.strip() and description.strip():
+        # Check if the required fields are filled
+        if name.strip() and description.strip() and (designation == "Teacher" or student_class.strip()):
             # Save the complaint to CSV
-            save_complaint(name, student_class, description)
+            save_complaint(name, designation, student_class, description)
             
             # Temporarily store the complaint in session state
             complaint = {
                 'Name': name.strip(),
-                'Class': student_class.strip(),
+                'Designation': designation,
+                'Class': student_class.strip() if designation == "Student" else "N/A",
                 'Description': description.strip(),
                 'Date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
@@ -71,7 +76,7 @@ if page == "Submit Complaint":
             if uploaded_file:
                 st.image(uploaded_file, caption="Uploaded file", use_column_width=True)
         else:
-            st.error("Please fill all the fields before submitting.")
+            st.error("Please fill all the required fields before submitting.")
 
 elif page == "View Complaints":
     st.header("View Complaints")
@@ -82,6 +87,7 @@ elif page == "View Complaints":
         for complaint in st.session_state['complaints']:
             st.subheader(f"Complaint Submitted on {complaint['Date']}")
             st.write(f"**Name**: {complaint['Name']}")
+            st.write(f"**Designation**: {complaint['Designation']}")
             st.write(f"**Class**: {complaint['Class']}")
             st.write(f"**Description**: {complaint['Description']}")
             st.write("---")
