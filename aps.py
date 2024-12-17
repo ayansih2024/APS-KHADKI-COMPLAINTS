@@ -45,9 +45,12 @@ if page == "Submit Complaint":
     # Input fields for the complaint
     name = st.text_input("Enter your Name:")
     designation = st.selectbox("Select your Designation:", ["Student", "Teacher"])
+
     student_class = ""
+    # Only show the 'Class' input field if the designation is 'Student'
     if designation == "Student":
         student_class = st.text_input("Enter your Class:")
+    
     description = st.text_area("Enter your Complaint Description:")
 
     # File upload (optional)
@@ -103,3 +106,7 @@ elif page == "View Complaints":
         st.write(complaints_df)
     else:
         st.write("No complaints in the CSV file.")
+
+# Footer note
+st.markdown("---")
+st.write("Created by Ayan Gantayat, Class 8A")
